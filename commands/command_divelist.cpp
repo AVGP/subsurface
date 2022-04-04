@@ -454,7 +454,7 @@ void AddDive::redoit()
 	sort_trip_table(&trip_table); // Though unlikely, adding a dive may reorder trips
 
 	// Select the newly added dive
-	setSelection(divesAndSitesToRemove.dives, divesAndSitesToRemove.dives[0]);
+	setSelection(divesAndSitesToRemove.dives, divesAndSitesToRemove.dives[0], -1);
 }
 
 void AddDive::undoit()
@@ -464,7 +464,7 @@ void AddDive::undoit()
 	sort_trip_table(&trip_table); // Though unlikely, removing a dive may reorder trips
 
 	// ...and restore the selection
-	setSelection(selection, currentDive);
+	setSelection(selection, currentDive, -1);
 }
 
 ImportDives::ImportDives(struct dive_table *dives, struct trip_table *trips, struct dive_site_table *sites,
@@ -546,7 +546,7 @@ void ImportDives::redoit()
 	divesToAdd = removeDives(divesAndSitesToRemove);
 
 	// Select the newly added dives
-	setSelection(divesAndSitesToRemoveNew.dives, divesAndSitesToRemoveNew.dives.back());
+	setSelection(divesAndSitesToRemoveNew.dives, divesAndSitesToRemoveNew.dives.back(), -1);
 
 	// Remember dives and sites to remove
 	divesAndSitesToRemove = std::move(divesAndSitesToRemoveNew);
@@ -577,7 +577,7 @@ void ImportDives::undoit()
 	divesAndSitesToRemove = std::move(divesAndSitesToRemoveNew);
 
 	// ...and restore the selection
-	setSelection(selection, currentDive);
+	setSelection(selection, currentDive, -1);
 
 	// Remove devices
 	for (const device &dev: devicesToAddAndRemove.devices)
@@ -614,7 +614,7 @@ void DeleteDive::undoit()
 
 	// Select all re-added dives and make the first one current
 	dive *currentDive = !divesToDelete.dives.empty() ? divesToDelete.dives[0] : nullptr;
-	setSelection(divesToDelete.dives, currentDive);
+	setSelection(divesToDelete.dives, currentDive, -1);
 }
 
 void DeleteDive::redoit()
@@ -659,7 +659,7 @@ void ShiftTime::redoit()
 	emit diveListNotifier.divesChanged(dives, DiveField::DATETIME);
 
 	// Select the changed dives
-	setSelection(diveList, diveList[0]);
+	setSelection(diveList, diveList[0], -1);
 
 	// Negate the time-shift so that the next call does the reverse
 	timeChanged = -timeChanged;
@@ -695,7 +695,7 @@ void RenumberDives::undoit()
 	dives.reserve(divesToRenumber.size());
 	for (const QPair<dive *, int> &item: divesToRenumber)
 		dives.push_back(item.first);
-	setSelection(dives, dives[0]);
+	setSelection(dives, dives[0], -1);
 }
 
 bool RenumberDives::workToBeDone()
@@ -724,7 +724,7 @@ void TripBase::redoit()
 	dives.reserve(divesToMove.divesToMove.size());
 	for (const DiveToTrip &item: divesToMove.divesToMove)
 		dives.push_back(item.dive);
-	setSelection(dives, dives[0]);
+	setSelection(dives, dives[0], -1);
 }
 
 void TripBase::undoit()
@@ -853,7 +853,7 @@ void SplitDivesBase::redoit()
 	unsplitDive = removeDives(diveToSplit);
 
 	// Select split dives and make first dive current
-	setSelection(divesToUnsplit.dives, divesToUnsplit.dives[0]);
+	setSelection(divesToUnsplit.dives, divesToUnsplit.dives[0], -1);
 }
 
 void SplitDivesBase::undoit()
@@ -863,7 +863,7 @@ void SplitDivesBase::undoit()
 	splitDives = removeDives(divesToUnsplit);
 
 	// Select unsplit dive and make it current
-	setSelection(diveToSplit.dives, diveToSplit.dives[0] );
+	setSelection(diveToSplit.dives, diveToSplit.dives[0], -1);
 }
 
 static std::array<dive *, 2> doSplitDives(const dive *d, duration_t time)
@@ -901,8 +901,9 @@ SplitDiveComputer::SplitDiveComputer(dive *d, int dc_num) : SplitDivesBase(d, sp
 	setText(Command::Base::tr("split dive computer"));
 }
 
-DiveComputerBase::DiveComputerBase(dive *old_dive, dive *new_dive, int dc_nr_after_in) : dc_nr_before(dc_number),
-	dc_nr_after(dc_nr_after_in)
+DiveComputerBase::DiveComputerBase(dive *old_dive, dive *new_dive, int dc_nr_before, int dc_nr_after) :
+	dc_nr_before(dc_nr_before),
+	dc_nr_after(dc_nr_after)
 {
 	if (!new_dive)
 		return;
@@ -936,11 +937,9 @@ void DiveComputerBase::redoit()
 	diveToAdd = removeDives(diveToRemove);
 	diveToRemove = std::move(addedDive);
 
-	dc_number = dc_nr_after;
-
 	// Select added dive and make it current.
 	// This automatically replots the profile.
-	setSelection(diveToRemove.dives, diveToRemove.dives[0]);
+	setSelection(diveToRemove.dives, diveToRemove.dives[0], dc_nr_after);
 
 	std::swap(dc_nr_before, dc_nr_after);
 }
@@ -952,13 +951,13 @@ void DiveComputerBase::undoit()
 }
 
 MoveDiveComputerToFront::MoveDiveComputerToFront(dive *d, int dc_num)
-	: DiveComputerBase(d, make_first_dc(d, dc_num), 0)
+	: DiveComputerBase(d, make_first_dc(d, dc_num), dc_num, 0)
 {
 	setText(Command::Base::tr("move dive computer to front"));
 }
 
 DeleteDiveComputer::DeleteDiveComputer(dive *d, int dc_num)
-	: DiveComputerBase(d, clone_delete_divecomputer(d, dc_num), std::min((int)number_of_computers(d) - 1, dc_num))
+	: DiveComputerBase(d, clone_delete_divecomputer(d, dc_num), dc_num, std::min((int)number_of_computers(d) - 1, dc_num))
 {
 	setText(Command::Base::tr("delete dive computer"));
 }
@@ -1065,7 +1064,7 @@ void MergeDives::redoit()
 	unmergedDives = removeDives(divesToMerge);
 
 	// Select merged dive and make it current
-	setSelection(diveToUnmerge.dives, diveToUnmerge.dives[0]);
+	setSelection(diveToUnmerge.dives, diveToUnmerge.dives[0], -1);
 }
 
 void MergeDives::undoit()
@@ -1075,7 +1074,7 @@ void MergeDives::undoit()
 	renumberDives(divesToRenumber);
 
 	// Select unmerged dives and make first one current
-	setSelection(divesToMerge.dives, divesToMerge.dives[0]);
+	setSelection(divesToMerge.dives, divesToMerge.dives[0], -1);
 }
 
 } // namespace Command
