@@ -66,7 +66,7 @@ ShownChange DiveFilter::update(const QVector<dive *> &dives) const
 		updateDiveStatus(d, newStatus, res, removeFromSelection);
 	}
 	updateSelection(selection, std::vector<dive *>(), removeFromSelection);
-	res.currentChanged = setSelection(selection);
+	res.currentChanged = setSelectionKeepCurrent(selection);
 	return res;
 }
 
@@ -106,7 +106,7 @@ ShownChange DiveFilter::updateAll() const
 		}
 	}
 	updateSelection(selection, std::vector<dive *>(), removeFromSelection);
-	res.currentChanged = setSelection(selection);
+	res.currentChanged = setSelectionKeepCurrent(selection);
 	return res;
 }
 
