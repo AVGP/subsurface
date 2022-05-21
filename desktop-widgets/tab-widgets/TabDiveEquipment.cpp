@@ -139,7 +139,7 @@ void TabDiveEquipment::toggleTriggeredColumn()
 
 void TabDiveEquipment::updateData()
 {
-	cylindersModel->updateDive(current_dive);
+	cylindersModel->updateDive(current_dive, dc_number);
 	weightModel->updateDive(current_dive);
 
 	bool is_ccr = current_dive && get_dive_dc(current_dive, dc_number)->divemode == CCR;

@@ -103,9 +103,10 @@ void DivePlannerPointsModel::setupStartTime()
 	}
 }
 
-void DivePlannerPointsModel::loadFromDive(dive *dIn)
+void DivePlannerPointsModel::loadFromDive(dive *dIn, int dcNrIn)
 {
 	d = dIn;
+	dcNr = dcNrIn;
 
 	int depthsum = 0;
 	int samplecount = 0;
@@ -113,7 +114,7 @@ void DivePlannerPointsModel::loadFromDive(dive *dIn)
 	struct divecomputer *dc = &(d->dc);
 	const struct event *evd = NULL;
 	enum divemode_t current_divemode = UNDEF_COMP_TYPE;
-	cylinders.updateDive(d);
+	cylinders.updateDive(d, dcNr);
 	duration_t lasttime = { 0 };
 	duration_t lastrecordedtime = {};
 	duration_t newtime = {};
@@ -195,7 +196,7 @@ void DivePlannerPointsModel::setupCylinders()
 		reset_cylinders(d, true);
 
 		if (d->cylinders.nr > 0) {
-			cylinders.updateDive(d);
+			cylinders.updateDive(d, dcNr);
 			return;		// We have at least one cylinder
 		}
 	}
@@ -213,7 +214,7 @@ void DivePlannerPointsModel::setupCylinders()
 		add_cylinder(&d->cylinders, 0, cyl);
 	}
 	reset_cylinders(d, false);
-	cylinders.updateDive(d);
+	cylinders.updateDive(d, dcNr);
 }
 
 // Update the dive's maximum depth.  Returns true if max. depth changed
