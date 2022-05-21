@@ -810,8 +810,6 @@ void delete_single_dive(int idx)
 	struct dive *dive = get_dive(idx);
 	if (!dive)
 		return; /* this should never happen */
-	if (dive->selected)
-		deselect_dive(dive);
 	remove_dive_from_trip(dive, &trip_table);
 	unregister_dive_from_dive_site(dive);
 	delete_dive_from_table(&dive_table, idx);
@@ -1012,6 +1010,9 @@ void add_imported_dives(struct dive_table *import_table, struct trip_table *impo
 	process_imported_dives(import_table, import_trip_table, import_sites_table, import_device_table,
 			       flags, &dives_to_add, &dives_to_remove, &trips_to_add,
 			       &dive_sites_to_add, devices_to_add);
+
+	/* Start by deselecting all dives, so that we don't end up with an invalid selection */
+	select_single_dive(NULL);
 
 	/* Add new dives to trip and site to get reference count correct. */
 	for (i = 0; i < dives_to_add.nr; i++) {
