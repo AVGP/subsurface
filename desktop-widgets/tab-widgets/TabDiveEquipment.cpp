@@ -137,18 +137,18 @@ void TabDiveEquipment::toggleTriggeredColumn()
 	}
 }
 
-void TabDiveEquipment::updateData()
+void TabDiveEquipment::updateData(const std::vector<dive *> &, dive *currentDive, int currentDC)
 {
-	cylindersModel->updateDive(current_dive, dc_number);
-	weightModel->updateDive(current_dive);
+	cylindersModel->updateDive(currentDive, currentDC);
+	weightModel->updateDive(currentDive);
 
-	bool is_ccr = current_dive && get_dive_dc(current_dive, dc_number)->divemode == CCR;
+	bool is_ccr = currentDive && get_dive_dc(currentDive, currentDC)->divemode == CCR;
 	if (is_ccr)
 		ui.cylinders->view()->showColumn(CylindersModel::USE);
 	else
 		ui.cylinders->view()->hideColumn(CylindersModel::USE);
-	if (current_dive && current_dive->suit)
-		ui.suit->setText(QString(current_dive->suit));
+	if (currentDive && currentDive->suit)
+		ui.suit->setText(QString(currentDive->suit));
 	else
 		ui.suit->clear();
 }
