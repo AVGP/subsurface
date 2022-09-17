@@ -274,16 +274,23 @@ void TankUseDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, c
 	model->setData(index, comboBox->currentIndex());
 }
 
-
-SensorDelegate::SensorDelegate(QObject *parent) : QStyledItemDelegate(parent)
+SensorDelegate::SensorDelegate(QObject *parent) : QStyledItemDelegate(parent), currentdc(nullptr)
 {
+}
+
+void SensorDelegate::setCurrentDC(divecomputer *dc)
+{
+	currentdc = dc;
 }
 
 QWidget *SensorDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &, const QModelIndex &index) const
 {
 	QComboBox *comboBox = new QComboBox(parent);
+
+	if (!currentdc)
+		return comboBox;
+
 	std::vector<int16_t> sensors;
-	const struct divecomputer *currentdc = get_dive_dc(current_dive, dc_number);
 	for (int i = 0; i < currentdc->samples; ++i) {
 		auto &sample = currentdc->sample[i];
 		for (int s = 0; s < MAX_SENSORS; ++s) {

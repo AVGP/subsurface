@@ -138,10 +138,13 @@ void TabDiveEquipment::toggleTriggeredColumn()
 
 void TabDiveEquipment::updateData(const std::vector<dive *> &, dive *currentDive, int currentDC)
 {
+	divecomputer *dc = get_dive_dc(currentDive, currentDC);
+
 	cylindersModel->updateDive(currentDive, currentDC);
 	weightModel->updateDive(currentDive);
+	sensorDelegate.setCurrentDC(dc);
 
-	bool is_ccr = currentDive && get_dive_dc(currentDive, currentDC)->divemode == CCR;
+	bool is_ccr = dc && dc->divemode == CCR;
 	if (is_ccr)
 		ui.cylinders->view()->showColumn(CylindersModel::USE);
 	else
