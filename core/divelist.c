@@ -1374,7 +1374,6 @@ void clear_dive_file_data()
 		trip_table.nr = 0;
 	}
 
-	clear_dive(&displayed_dive);
 	clear_device_table(&device_table);
 	clear_events();
 	clear_filter_presets();
