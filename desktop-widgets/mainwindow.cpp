@@ -658,8 +658,9 @@ void MainWindow::on_actionReplanDive_triggered()
 	setApplicationState(ApplicationState::PlanDive);
 
 	disableShortcuts(true);
-	profile->setPlanState(&displayed_dive, 0);
-	plannerWidgets->replanDive();
+	copy_dive(current_dive, &displayed_dive); // Planning works on a copy of the dive (for now).
+	profile->setPlanState(&displayed_dive, dc_number);
+	plannerWidgets->replanDive(dc_number);
 }
 
 void MainWindow::on_actionDivePlanner_triggered()
@@ -672,7 +673,7 @@ void MainWindow::on_actionDivePlanner_triggered()
 
 	disableShortcuts(true);
 	profile->setPlanState(&displayed_dive, 0);
-	plannerWidgets->planDive();
+	plannerWidgets->planDive(current_dive);
 }
 
 void MainWindow::on_actionAddDive_triggered()
