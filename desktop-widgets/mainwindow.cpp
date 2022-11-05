@@ -543,7 +543,7 @@ void MainWindow::on_actionPrint_triggered()
 {
 #ifndef NO_PRINTING
 	// When in planner, only print the planned dive.
-	dive *singleDive = appState == ApplicationState::PlanDive ? &displayed_dive
+	dive *singleDive = appState == ApplicationState::PlanDive ? plannerWidgets->getDive()
 								  : nullptr;
 	PrintDialog dlg(singleDive, this);
 
@@ -630,8 +630,6 @@ bool MainWindow::plannerStateClean()
 
 void MainWindow::planCanceled()
 {
-	// while planning we might have modified the displayed_dive
-	// let's refresh what's shown on the profile
 	showProfile();
 	refreshDisplay();
 }
@@ -659,8 +657,8 @@ void MainWindow::on_actionReplanDive_triggered()
 	setApplicationState(ApplicationState::PlanDive);
 
 	disableShortcuts(true);
-	copy_dive(current_dive, &displayed_dive); // Planning works on a copy of the dive (for now).
-	profile->setPlanState(&displayed_dive, profile->dc);
+	plannerWidgets->prepareReplanDive(current_dive);
+	profile->setPlanState(plannerWidgets->getDive(), profile->dc);
 	plannerWidgets->replanDive(profile->dc);
 }
 
@@ -673,8 +671,9 @@ void MainWindow::on_actionDivePlanner_triggered()
 	setApplicationState(ApplicationState::PlanDive);
 
 	disableShortcuts(true);
-	profile->setPlanState(&displayed_dive, 0);
-	plannerWidgets->planDive(current_dive);
+	plannerWidgets->preparePlanDive(current_dive);
+	profile->setPlanState(plannerWidgets->getDive(), 0);
+	plannerWidgets->planDive();
 }
 
 void MainWindow::on_actionAddDive_triggered()

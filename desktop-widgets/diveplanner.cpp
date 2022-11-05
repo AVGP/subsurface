@@ -54,9 +54,9 @@ DivePlannerWidget::DivePlannerWidget(PlannerWidgets *parent)
 	view->setItemDelegateForColumn(CylindersModel::TYPE, new TankInfoDelegate(this));
 	connect(ui.cylinderTableWidget, &TableView::addButtonClicked, plannerModel, &DivePlannerPointsModel::addCylinder_clicked);
 	connect(ui.tableWidget, &TableView::addButtonClicked, plannerModel, &DivePlannerPointsModel::addDefaultStop);
-	connect(cylinders, &CylindersModel::dataChanged, parent->gasModel.get(), &GasSelectionModel::repopulate);
-	connect(cylinders, &CylindersModel::rowsInserted, parent->gasModel.get(), &GasSelectionModel::repopulate);
-	connect(cylinders, &CylindersModel::rowsRemoved, parent->gasModel.get(), &GasSelectionModel::repopulate);
+	connect(cylinders, &CylindersModel::dataChanged, parent, &PlannerWidgets::repopulateGasModel);
+	connect(cylinders, &CylindersModel::rowsInserted, parent, &PlannerWidgets::repopulateGasModel);
+	connect(cylinders, &CylindersModel::rowsRemoved, parent, &PlannerWidgets::repopulateGasModel);
 	connect(cylinders, &CylindersModel::dataChanged, plannerModel, &DivePlannerPointsModel::emitDataChanged);
 	connect(cylinders, &CylindersModel::dataChanged, plannerModel, &DivePlannerPointsModel::cylinderModelEdited);
 	connect(cylinders, &CylindersModel::rowsInserted, plannerModel, &DivePlannerPointsModel::cylinderModelEdited);
@@ -519,8 +519,8 @@ void PlannerSettingsWidget::setBackgasBreaks(bool dobreaks)
 
 void PlannerSettingsWidget::setBailoutVisibility(int mode)
 {
-		ui.bailout->setDisabled(!(mode == CCR || mode == PSCR));
-		ui.sacFactor->setDisabled(mode == CCR);
+	ui.bailout->setDisabled(!(mode == CCR || mode == PSCR));
+	ui.sacFactor->setDisabled(mode == CCR);
 }
 
 PlannerDetails::PlannerDetails(QWidget *parent) : QWidget(parent)
@@ -543,18 +543,22 @@ PlannerWidgets::PlannerWidgets() : plannerWidget(this)
 	connect(plannerDetails.printPlan(), &QPushButton::pressed, this, &PlannerWidgets::printDecoPlan);
 	connect(DivePlannerPointsModel::instance(), &DivePlannerPointsModel::calculatedPlanNotes,
 		&plannerDetails, &PlannerDetails::setPlanNotes);
+	planned_dive.reset(alloc_dive());
 }
 
 PlannerWidgets::~PlannerWidgets()
 {
 }
 
-void PlannerWidgets::planDive(dive *currentDive)
+struct dive *PlannerWidgets::getDive() const
 {
-	DivePlannerPointsModel::instance()->setPlanMode(DivePlannerPointsModel::PLAN);
+	return planned_dive.get();
+}
 
+void PlannerWidgets::preparePlanDive(const dive *currentDive)
+{
 	// create a simple starting dive, using the first gas from the just copied cylinders
-	DivePlannerPointsModel::instance()->createSimpleDive(&displayed_dive);
+	DivePlannerPointsModel::instance()->createSimpleDive(planned_dive.get());
 
 	// plan the dive in the same mode as the currently selected one
 	if (currentDive) {
@@ -565,27 +569,42 @@ void PlannerWidgets::planDive(dive *currentDive)
 		else	// No salinity means salt water
 			plannerWidget.setSalinity(SEAWATER_SALINITY);
 	}
-	gasModel->repopulate();
+}
+
+void PlannerWidgets::planDive()
+{
+	DivePlannerPointsModel::instance()->setPlanMode(DivePlannerPointsModel::PLAN);
+
+	repopulateGasModel();
 	diveTypeModel->repopulate(); // TODO: this doesn't change anything!?
 	plannerWidget.setReplanButton(false);
+	plannerWidget.setupStartTime(timestampToDateTime(planned_dive->when));	// This will reload the profile!
+}
 
-	plannerWidget.setupStartTime(timestampToDateTime(displayed_dive.when));	// This will reload the profile!
+void PlannerWidgets::prepareReplanDive(const dive *d)
+{
+	copy_dive(d, planned_dive.get()); // We might also free/realloc the dive.
 }
 
 void PlannerWidgets::replanDive(int currentDC)
 {
 	DivePlannerPointsModel::instance()->setPlanMode(DivePlannerPointsModel::PLAN);
-	DivePlannerPointsModel::instance()->loadFromDive(&displayed_dive, currentDC);
+	DivePlannerPointsModel::instance()->loadFromDive(planned_dive.get(), currentDC);
 
 	diveTypeModel->repopulate(); // TODO: this doesn't change anything!?
 	plannerWidget.setReplanButton(true);
-	plannerWidget.setupStartTime(timestampToDateTime(displayed_dive.when));
-	if (displayed_dive.surface_pressure.mbar)
-		plannerWidget.setSurfacePressure(displayed_dive.surface_pressure.mbar);
-	if (displayed_dive.salinity)
-		plannerWidget.setSalinity(displayed_dive.salinity);
-	reset_cylinders(&displayed_dive, true);
-	DivePlannerPointsModel::instance()->cylindersModel()->updateDive(&displayed_dive, currentDC);
+	plannerWidget.setupStartTime(timestampToDateTime(planned_dive->when));
+	if (planned_dive->surface_pressure.mbar)
+		plannerWidget.setSurfacePressure(planned_dive->surface_pressure.mbar);
+	if (planned_dive->salinity)
+		plannerWidget.setSalinity(planned_dive->salinity);
+	reset_cylinders(planned_dive.get(), true);
+	DivePlannerPointsModel::instance()->cylindersModel()->updateDive(planned_dive.get(), currentDC);
+}
+
+void PlannerWidgets::repopulateGasModel()
+{
+	gasModel->repopulate(planned_dive.get());
 }
 
 void PlannerWidgets::printDecoPlan()
@@ -620,7 +639,7 @@ void PlannerWidgets::printDecoPlan()
 	painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
 	auto profile = std::make_unique<ProfileScene>(1.0, true, false);
-	profile->draw(&painter, QRect(0, 0, pixmap.width(), pixmap.height()), &displayed_dive, 0, DivePlannerPointsModel::instance(), true);
+	profile->draw(&painter, QRect(0, 0, pixmap.width(), pixmap.height()), planned_dive.get(), 0, DivePlannerPointsModel::instance(), true);
 
 	QByteArray byteArray;
 	QBuffer buffer(&byteArray);

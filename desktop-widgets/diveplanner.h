@@ -2,13 +2,12 @@
 #ifndef DIVEPLANNER_H
 #define DIVEPLANNER_H
 
-#include <memory>
+#include "core/owning_ptrs.h"
+
 #include <QAbstractTableModel>
 #include <QAbstractButton>
 #include <QDateTime>
 
-class QListView;
-class QModelIndex;
 class DivePlannerPointsModel;
 class GasSelectionModel;
 class DiveTypeSelectionModel;
@@ -82,17 +81,22 @@ class PlannerWidgets : public QObject {
 public:
 	PlannerWidgets();
 	~PlannerWidgets();
-	void planDive(dive *currentDive);
+	void preparePlanDive(const dive *currentDive); // Create a new planned dive
+	void planDive();
+	void prepareReplanDive(const dive *d); // Make a copy of the dive to be replanned
 	void replanDive(int currentDC);
+	struct dive *getDive() const;
 public
 slots:
 	void printDecoPlan();
 public:
+	void repopulateGasModel();
 	DivePlannerWidget plannerWidget;
 	PlannerSettingsWidget plannerSettingsWidget;
 	PlannerDetails plannerDetails;
 	std::unique_ptr<GasSelectionModel> gasModel;
 	std::unique_ptr<DiveTypeSelectionModel> diveTypeModel;
+	OwningDivePtr planned_dive;
 };
 
 #endif // DIVEPLANNER_H
