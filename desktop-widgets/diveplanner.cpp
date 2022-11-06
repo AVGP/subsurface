@@ -209,6 +209,7 @@ void DivePlannerWidget::customSalinityChanged(double density)
 
 void PlannerSettingsWidget::disableDecoElements(int mode)
 {
+	divemode_t rebreathermode = DivePlannerPointsModel::instance()->getRebreatherMode();
 	if (mode == RECREATIONAL) {
 		ui.label_gflow->setDisabled(false);
 		ui.label_gfhigh->setDisabled(false);
@@ -243,8 +244,7 @@ void PlannerSettingsWidget::disableDecoElements(int mode)
 		ui.sacfactor->blockSignals(false);
 		ui.problemsolvingtime->blockSignals(false);
 		ui.display_variations->setDisabled(true);
-	}
-	else if (mode == VPMB) {
+	} else if (mode == VPMB) {
 		ui.label_gflow->setDisabled(true);
 		ui.label_gfhigh->setDisabled(true);
 		ui.gflow->setDisabled(true);
@@ -261,7 +261,7 @@ void PlannerSettingsWidget::disableDecoElements(int mode)
 			ui.backgasBreaks->setChecked(false);
 			ui.backgasBreaks->blockSignals(false);
 		}
-		ui.bailout->setDisabled(!(displayed_dive.dc.divemode == CCR || displayed_dive.dc.divemode == PSCR));
+		ui.bailout->setDisabled(!(rebreathermode == CCR || rebreathermode == PSCR));
 		ui.bottompo2->setDisabled(false);
 		ui.decopo2->setDisabled(false);
 		ui.safetystop->setDisabled(true);
@@ -278,8 +278,7 @@ void PlannerSettingsWidget::disableDecoElements(int mode)
 		ui.sacfactor->setValue(PlannerShared::sacfactor());
 		ui.problemsolvingtime->setValue(prefs.problemsolvingtime);
 		ui.display_variations->setDisabled(false);
-	}
-	else if (mode == BUEHLMANN) {
+	} else if (mode == BUEHLMANN) {
 		ui.label_gflow->setDisabled(false);
 		ui.label_gfhigh->setDisabled(false);
 		ui.gflow->setDisabled(false);
@@ -296,7 +295,7 @@ void PlannerSettingsWidget::disableDecoElements(int mode)
 			ui.backgasBreaks->setChecked(false);
 			ui.backgasBreaks->blockSignals(false);
 		}
-		ui.bailout->setDisabled(!(displayed_dive.dc.divemode == CCR || displayed_dive.dc.divemode == PSCR));
+		ui.bailout->setDisabled(!(rebreathermode == CCR || rebreathermode == PSCR));
 		ui.bottompo2->setDisabled(false);
 		ui.decopo2->setDisabled(false);
 		ui.safetystop->setDisabled(true);
