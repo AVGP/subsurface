@@ -358,7 +358,7 @@ void AirTypesDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
 	model->setData(index, QVariant(combo->currentIndex()));
 }
 
-AirTypesDelegate::AirTypesDelegate(QObject *parent) : ComboBoxDelegate(GasSelectionModel::instance(), parent, false)
+AirTypesDelegate::AirTypesDelegate(QAbstractItemModel *model, QObject *parent) : ComboBoxDelegate(model, parent, false)
 {
 }
 
@@ -374,7 +374,7 @@ void DiveTypesDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 	model->setData(index, QVariant(combo->currentIndex()));
 }
 
-DiveTypesDelegate::DiveTypesDelegate(QObject *parent) : ComboBoxDelegate(DiveTypeSelectionModel::instance(), parent, false)
+DiveTypesDelegate::DiveTypesDelegate(QAbstractItemModel *model, QObject *parent) : ComboBoxDelegate(model, parent, false)
 {
 }
 
