@@ -3,8 +3,8 @@
 #include "core/divelist.h"
 #include "core/subsurface-string.h"
 #include "qt-models/cylindermodel.h"
+#include "qt-models/models.h" // For defaultModelFont().
 #include "core/planner.h"
-#include "qt-models/models.h"
 #include "core/device.h"
 #include "core/qthelper.h"
 #include "core/sample.h"
@@ -84,8 +84,6 @@ void DivePlannerPointsModel::createSimpleDive(struct dive *dIn)
 		addStop(M_OR_FT(5, 15), 45 * 60, 0, cylinderid, true, UNDEF_COMP_TYPE);
 	}
 	updateDiveProfile();
-	GasSelectionModel::instance()->repopulate();
-	DiveTypeSelectionModel::instance()->repopulate();
 }
 
 void DivePlannerPointsModel::setupStartTime()
@@ -177,7 +175,6 @@ void DivePlannerPointsModel::loadFromDive(dive *dIn, int dcNrIn)
 	current_divemode = get_current_divemode(dc, d->dc.duration.seconds, &evd, &current_divemode);
 	if (!hasMarkedSamples && !dc->last_manual_time.seconds)
 		addStop(0, d->dc.duration.seconds,cylinderid, last_sp.mbar, true, current_divemode);
-	DiveTypeSelectionModel::instance()->repopulate();
 	preserved_until = d->duration;
 
 	updateDiveProfile();
