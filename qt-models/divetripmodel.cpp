@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include "qt-models/divetripmodel.h"
 #include "core/divefilter.h"
+#include "core/divelog.h"
 #ifdef SUBSURFACE_MOBILE
 #include "qt-models/mobilelistmodel.h"
 #endif
@@ -707,7 +708,7 @@ void DiveTripModelTree::populate()
 	// we want this to be two calls as the second text is overwritten below by the lines starting with "\r"
 	uiNotification(QObject::tr("populate data model"));
 	uiNotification(QObject::tr("start processing"));
-	for (int i = 0; i < dive_table.nr; ++i) {
+	for (int i = 0; i < divelog.dives->nr; ++i) {
 		dive *d = get_dive(i);
 		if (!d) // should never happen
 			continue;
@@ -737,7 +738,7 @@ void DiveTripModelTree::populate()
 
 	// Remember the index of the current dive
 	oldCurrent = current_dive;
-	uiNotification(QObject::tr("%1 dives processed").arg(dive_table.nr));
+	uiNotification(QObject::tr("%1 dives processed").arg(divelog.dives->nr));
 }
 
 int DiveTripModelTree::rowCount(const QModelIndex &parent) const
@@ -1466,8 +1467,8 @@ void DiveTripModelList::populate()
 	DiveFilter::instance()->reset(); // The data was reset - update filter status. TODO: should this really be done here?
 
 	// Fill model
-	items.reserve(dive_table.nr);
-	for (int i = 0; i < dive_table.nr; ++i) {
+	items.reserve(divelog.dives->nr);
+	for (int i = 0; i < divelog.dives->nr; ++i) {
 		dive *d = get_dive(i);
 		if (!d || d->hidden_by_filter)
 			continue;

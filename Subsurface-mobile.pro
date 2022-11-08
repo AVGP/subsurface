@@ -54,6 +54,7 @@ SOURCES += subsurface-mobile-main.cpp \
 	core/filterconstraint.cpp \
 	core/filterpreset.cpp \
 	core/divelist.c \
+	core/divelog.cpp \
 	core/gas-model.c \
 	core/gaspressures.c \
 	core/git-access.c \
@@ -225,6 +226,7 @@ HEADERS += \
 	core/filterconstraint.h \
 	core/filterpreset.h \
 	core/divelist.h \
+	core/divelog.h \
 	core/divelogexportlogic.h \
 	core/divesitehelpers.h \
 	core/exif.h \
