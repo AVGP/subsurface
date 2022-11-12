@@ -36,6 +36,15 @@ divelog::~divelog()
 	delete filter_presets;
 }
 
+divelog::divelog(divelog &&log)
+	: devices(log.devices)
+	, filter_presets(std::move(log.filter_presets))
+{
+	move_dive_table(log.dives, dives);
+	move_trip_table(log.trips, trips);
+	move_dive_site_table(log.sites, sites);
+}
+
 void divelog::clear()
 {
 	while (dives->nr)
